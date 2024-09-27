@@ -1,12 +1,11 @@
 services:
-
   node:
     build:
       context: ./node
       dockerfile: Dockerfile
     image: node-desafio
     container_name: node
-    entrypoint: dockerize -wait tcp://db:3306 -timeout 20s docker-entrypoint.sh
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 30s docker-entrypoint.sh
     networks:
       - desafionet
     volumes:
@@ -16,7 +15,7 @@ services:
       - "3000:3000"
     depends_on: 
       - db
-
+  
   db:
     build:
       context: ./mysql
@@ -25,13 +24,15 @@ services:
     container_name: db
     restart: always
     volumes:
-      - db_data:/var/lib/mysql
+      - type: volume
+        source: mysql-data
+        target: /var/lib/mysql
     tty: true
     ports:
       - "3386:3386"
     networks:
       - desafionet
-
+  
   nginx:
     build:
       context: ./nginx
@@ -43,8 +44,12 @@ services:
     ports:
       - "8080:80"
     depends_on:
-    - node
+      - node
 
 networks:
   desafionet:
     driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local
